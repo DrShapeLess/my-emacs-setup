@@ -1,0 +1,70 @@
+#+TITLE: Setting up LilyPond in macOS
+#+AUTHOR: Jacky Li
+#+EMAIL: dr.shapeless@gmail.com
+This short tutorial is about setting up LilyPond in emacs under macOS.
+The macOS version I currently using is macOS 11.1 BigSur, and the emacs version is 28.0.50, which is the native compiled gccemacs.
+The tutorial is inspired by this, http://www.danielhensel.de/www.danielhensel.de_en/styled-19/styled-22/styled-23/
+But I personally do not recommand to follow his approach, because he modified the source file comes with LilyPond.
+* Install emacs
+For absolute beginners, just download emacs from [[http://emacsformacosx.com]].
+Emacs version doesn't matter that much.
+I personally use gccemacs for the cutting edge performance improve, which makes my life easier on my crappy 2015 MacBook Pro. It was a pain in the ass, you may search gccemacs for more information.
+* Install LilyPond
+Download LilyPond from this site https://lilypond.org/macos-x.html. Select the unofficial one for macOS 10.15. Install it like any other applications.
+* Add the LilyPond binary to your terminal path
+The default shell for macOS 10.15 or above is zsh. You can add paths by editing .zshrc at your home directory.
+Edit your ~/.zshrc to let it recognize the LilyPond path
+Add this line into it.
+#+begin_src shell
+  path+=/Applications/LilyPond.app/Contents/Resources/bin
+#+end_src
+If you don't have your .zshrc at ~/ , just create one as a plain text document, ~/.zshrc.
+
+Add this line to your init.el to let emacs recognize the load path
+#+begin_src emacs-lisp
+(add-to-list 'exec-path "/Applications/LilyPond.app/Contents/Resources/bin")
+#+end_src
+
+You should now be able to run lilypond in emacs shell mode.
+You can use M-x shell to entering shell mode, which is almost the same as a terminal.
+* Edit your init.el file to setup LilyPond in emacs
+You may only have a ~/.emacs file at your home directory, which functions just the same as the ~/.emacs.d/init.el. But you should have either one of them only, otherwise the config may not behave as you expect. I recommand using init.el as it keeps your home directory clean. If you consider moving from .emacs to init.el, just copy all the things in .emacs, create the init.el, paste them all, and delete the .emacs document.
+
+For modern emacs config, I really recommand using use-package, it is clean and elegant.
+If you don't have your use-package setup yet, paste the following into init.el.
+#+begin_src emacs-lisp
+  (require 'package)
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+			   ("org" . "https://orgmode.org/elpa/")
+			   ("elpa" . "https://elpa.gnu.org/packages/")))
+  (package-initialize)
+  (unless package-archive-contents
+    (package-refresh-contents))
+
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package))
+
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+#+end_src
+This gives you the basic setup for using use-package.
+
+If use-package is ready, paste the following to your init.el.
+#+begin_src emacs-lisp
+  (use-package LilyPond-mode
+    :load-path "/Applications/LilyPond.app/Contents/Resources/share/emacs/site-lisp"
+    :mode
+    ("\\.ly$" "\\.ily$" "\\.lytex$")
+    :hook
+    (LilyPond-mode . (lambda () (turn-on-font-lock)))
+    :config
+    (setq LilyPond-ps-command " /Applications/Preview.app/Contents/MacOS/Preview --watch") ; use preview to view PS file
+    (setq LilyPond-pdf-command
+	  " /Applications/Preview.app/Contents/MacOS/Preview") ; use preview to view pdf file
+    (setq LilyPond-midi-command "open")
+    (setq LilyPond-all-midi-command "/Applications/GarageBand.app/Contents/MacOS/GarageBand -ia") ; use GarageBand to play MIDI files, if you have bought Logic Pro X, you may change it
+    )
+#+end_src
+
+Now you may just restart your emacs, LilyPond should just work fine.
+For any bug reports or inquiries, just email me at dr.shapeless@gmail.com
